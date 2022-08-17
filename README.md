@@ -7,11 +7,11 @@ Requirements: before pulling the project install python 3.8
 4. Run the following command in your terminal -> pip3 install requirements.txt
 5. Create local db in postgres or use creds for existing one
 6. After all packages are installed create .env file in backend folder and add env variables:
-    > SECRET_KEY=YOUR_SECRET - to generate one you can use https://djecrety.ir
-    > DB_NAME=NAME_OF_YOUR_DB
-    > DB_USER=DB_USER
-    > DB_PASSWORD=DB_PASS
-    > DB_HOST=DB_HOST
+    - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SECRET_KEY=YOUR_SECRET - to generate one you can use https://djecrety.ir
+    - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DB_NAME=NAME_OF_YOUR_DB
+    - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DB_USER=DB_USER
+    - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DB_PASSWORD=DB_PASS
+    - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DB_HOST=DB_HOST
 7. In your terminal run -> ./manage.py migrate
 8. Create superuser via termianl -> ./manage.py createsuperuser
 
