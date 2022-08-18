@@ -18,10 +18,11 @@ from rest_framework.serializers import ValidationError
 @api_view(['GET'])
 def get_routes(request):
     routes = [
-        'api/register',
-        'api/token',
-        'api/token/refresh',
-        'api/store/categories'
+        'api/auth/register',
+        'api/auth/login',
+        'api/auth/token/refresh',
+        'api/store/categories',
+        'api/store/categories/<id>'
     ]
     return Response(routes)
 
@@ -36,35 +37,13 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
 
-@api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
-def categories_list(request):
-    if request.query_params:
-        categories = Category.objects.filter(**request.query_params.dict())
-    else:
-        categories = Category.objects.all()
-
-    print(categories)
-
-    if categories:
-        data = CategorySerializer(categories, many=True)
-        return Response(data.data)
-    else:
-        return Response(status=HTTP_404_NOT_FOUND)
+class CategoryListCreateView(generics.ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = (IsAuthenticated,)
 
 
-@api_view(['POST'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
-def add_category(request):
-    category = CategorySerializer(data=request.data)
-
-    if Category.objects.filter(**request.data).exists():
-        raise ValidationError('This data already exists')
-
-    if category.is_valid():
-        category.save()
-        return Response(category.data)
-    else:
-        return Response(status=HTTP_404_NOT_FOUND)
+class CategoryUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = (IsAuthenticated,)

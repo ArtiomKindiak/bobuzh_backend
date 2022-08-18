@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -25,7 +27,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         validators=[UniqueValidator(queryset=User.objects.all())]
     )
 
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    if settings.DEBUG:
+        password = serializers.CharField(write_only=True, required=True)
+    else:
+        password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+
     password2 = serializers.CharField(write_only=True, required=True)
 
     class Meta:
@@ -59,11 +65,12 @@ class RegisterSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name', 'description', 'code', 'parent', 'created_at', 'updated_at']
-        read_only_fields = ['created_at', 'updated_at']
+        fields = '__all__'
+        read_only_fields = ('created_at', 'updated_at')
 
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['name', 'description', 'code', 'parent', 'price', 'quantity', 'brand', 'category', 'is_available']
+        fields = '__all__'
+        read_only_fields = ('created_at', 'updated_at')
