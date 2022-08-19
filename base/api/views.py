@@ -43,7 +43,19 @@ class CategoryListCreateView(generics.ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
 
 
-class CategoryUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+class CategoryRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (IsAuthenticated,)
+
+
+class ProductListCreateView(generics.ListCreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = (IsAuthenticated,)
+
+
+class ProductRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
     permission_classes = (IsAuthenticated,)
