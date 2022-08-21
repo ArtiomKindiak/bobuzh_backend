@@ -38,9 +38,15 @@ class RegisterView(generics.CreateAPIView):
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):
-    queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        queryset = Category.objects.all()
+        if params := self.request.query_params:
+            params = params.dict()
+            queryset = queryset.filter(**params)
+        return queryset
 
 
 class CategoryRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
@@ -50,9 +56,15 @@ class CategoryRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ProductListCreateView(generics.ListCreateAPIView):
-    queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        queryset = Product.objects.all()
+        if params := self.request.query_params:
+            params = params.dict()
+            queryset = queryset.filter(**params)
+        return queryset
 
 
 class ProductRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
