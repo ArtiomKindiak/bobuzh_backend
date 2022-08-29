@@ -18,13 +18,15 @@ from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, Blac
 @api_view(['GET'])
 def get_routes(request):
     routes = [
-        'api/auth/register',
-        'api/auth/login',
-        'api/auth/token/refresh',
-        'api/auth/logout',
-        'api/auth/logout-all'
-        'api/store/categories',
-        'api/store/categories/<id>'
+        'api/auth/register/',
+        'api/auth/login/',
+        'api/auth/token/refresh/',
+        'api/auth/logout/',
+        'api/auth/logout-all/',
+        'api/store/categories/',
+        'api/store/categories/<id>/',
+        'api/store/products/',
+        'api/store/products/<id>'
     ]
     return Response(routes)
 
