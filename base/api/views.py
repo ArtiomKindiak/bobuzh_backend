@@ -4,7 +4,16 @@ from django.contrib.auth.models import User
 from base.models import Category, Product
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from .serializers import (MyTokenObtainPairSerializer, RegisterSerializer, CategorySerializer, ProductSerializer)
+from .serializers import (
+    MyTokenObtainPairSerializer,
+    RegisterSerializer,
+    CategorySerializer,
+    ProductSerializer,
+    CustomerSerializer,
+    OrderSerializer,
+    OrderItemSerializer,
+    AddOrderItemSerializer,
+)
 from rest_framework import generics, status
 from rest_framework.views import APIView
 
@@ -12,7 +21,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
-
 
 
 @api_view(['GET'])

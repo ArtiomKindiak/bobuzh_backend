@@ -26,7 +26,7 @@ class Category(models.Model):
 
 class Product(models.Model):
     name = models.CharField('product name', max_length=255)
-    description = models.TextField('description')
+    description = models.TextField('description', blank=True, null=True)
     code = models.CharField('product code', max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -46,18 +46,36 @@ class Product(models.Model):
 class Customer(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     email = models.EmailField('email', blank=True, null=True)
-    first_name = models.CharField('first name', max_length=255)
-    last_name = models.CharField('last name', max_length=255)
-    mobile_number = models.CharField('mobile number', max_length=50)
-    address = models.CharField('address', max_length=255)
-    post_address = models.CharField('post address', max_length=255)
+    first_name = models.CharField('first name', max_length=255, blank=True, null=True)
+    last_name = models.CharField('last name', max_length=255, blank=True, null=True)
+    mobile_number = models.CharField('mobile number', max_length=50, blank=True, null=True)
+    address = models.CharField('address', max_length=255, blank=True, null=True)
+    post_address = models.CharField('post address', max_length=255, blank=True, null=True)
 
 
 class Order(models.Model):
+    class Status(models.TextChoices):
+        PEN = "1", "Pending"
+        PRO = "2", "Processed"
+        DEL = "3", "Delivered"
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, blank=True, null=True)
-    products = models.ManyToManyField(Product, blank=True)
-    total_price = models.DecimalField('total order price', default=0.00, max_digits=10, decimal_places=2)
+    total_price = models.DecimalField(
+        'total order price',
+        default=0.00,
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+    )
+    status = models.CharField('Order status', choices=Status.choices,  default=Status.PEN)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = 'Orders'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.id}_{self.created_at}"
 
 
 class OrderItem(models.Model):

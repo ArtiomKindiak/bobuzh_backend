@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -7,7 +8,13 @@ from django.contrib.auth.models import User
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 
-from base.models import Category, Product
+from base.models import (
+    Category,
+    Product,
+    Customer,
+    Order,
+    OrderItem
+)
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -74,3 +81,68 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at')
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = '__all__'
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    customer = CustomerSerializer(read_only=True)
+    products = ProductSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ('id', 'customer', 'total_price', 'created_at', 'products')
+
+    def create(self, validated_data):
+        order = Order.objects.create(**validated_data)
+
+        return order
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    order = OrderSerializer(read_only=True)
+    product = ProductSerializer(read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = ('id', 'product', 'order', 'quantity',)
+
+
+class AddOrderItemSerializer(serializers.ModelSerializer):
+    product_id = serializers.IntegerField()
+    order_id = serializers.IntegerField()
+
+    class Meta:
+        model = OrderItem
+        fields = ("quantity", "product_id", "order_id",)
+        extra_kwargs = {
+            "quantity": {"required": True},
+            "product_id": {"required": True},
+            "order_id": {"required": True},
+        }
+
+    def create(self, validated_data):
+        product = get_object_or_404(Product, id=validated_data['product_id'])
+        order = get_object_or_404(Order, id=validated_data['order_id'])
+
+        if product.quantity == 0 or not product.is_available:
+            raise serializers.ValidationError(
+                {"not available": "the product is not available."}
+            )
+
+        order_item = OrderItem.objects.create(
+            product=product,
+            order=order,
+            quantity=validated_data["quantity"]
+        )
+
+        order_item.save()
+
+        product.quantity = product.quantity - order_item.quantity
+        product.save()
+
+        return order_item
