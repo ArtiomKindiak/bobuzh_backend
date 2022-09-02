@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 
 from django.contrib.auth.models import User
-from base.models import Category, Product
+from base.models import Category, Product, Order, OrderItem
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .serializers import (
@@ -14,7 +14,7 @@ from .serializers import (
     OrderItemSerializer,
     AddOrderItemSerializer,
 )
-from rest_framework import generics, status
+from rest_framework import generics, status, viewsets
 from rest_framework.views import APIView
 
 from rest_framework.response import Response
@@ -109,3 +109,21 @@ class ProductRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = (IsAuthenticated,)
+
+
+class OrderViewSet(viewsets.ViewSet):
+
+    def list(self, request):
+        queryset = Order.objects.all()
+        serializer = OrderSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def create(self, request):
+        order = Order.objects.create()
+
+        data = request.data['products']
+        serializer = AddOrderItemSerializer(data)
+        order_item = OrderItem.objects.create(**serializer.data, order_id=order.id)
+
+        order_serializer = OrderSerializer(order)
+        return Response(order_serializer.data)

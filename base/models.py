@@ -67,7 +67,7 @@ class Order(models.Model):
         blank=True,
         null=True,
     )
-    status = models.CharField('Order status', choices=Status.choices,  default=Status.PEN)
+    status = models.CharField('Order status', max_length=10, choices=Status.choices,  default=Status.PEN)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -89,4 +89,3 @@ def update_order(sender, instance, **kwargs):
     total = instance.quantity * instance.product.price
     instance.product.quantity -= instance.quantity
     instance.order.total_price += total
-    instance.order.products.add(instance.product)

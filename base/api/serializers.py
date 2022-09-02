@@ -113,36 +113,29 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class AddOrderItemSerializer(serializers.ModelSerializer):
-    product_id = serializers.IntegerField()
-    order_id = serializers.IntegerField()
+    # order_id = serializers.IntegerField()
 
     class Meta:
         model = OrderItem
-        fields = ("quantity", "product_id", "order_id",)
-        extra_kwargs = {
-            "quantity": {"required": True},
-            "product_id": {"required": True},
-            "order_id": {"required": True},
-        }
+        fields = ("quantity", "product_id",)
 
-    def create(self, validated_data):
-        product = get_object_or_404(Product, id=validated_data['product_id'])
-        order = get_object_or_404(Order, id=validated_data['order_id'])
-
-        if product.quantity == 0 or not product.is_available:
-            raise serializers.ValidationError(
-                {"not available": "the product is not available."}
-            )
-
-        order_item = OrderItem.objects.create(
-            product=product,
-            order=order,
-            quantity=validated_data["quantity"]
-        )
-
-        order_item.save()
-
-        product.quantity = product.quantity - order_item.quantity
-        product.save()
-
-        return order_item
+    # def create(self, validated_data, **kwargs):
+    #     product = get_object_or_404(Product, id=validated_data['product_id'])
+    #
+    #     if product.quantity == 0 or not product.is_available:
+    #         raise serializers.ValidationError(
+    #             {"not available": "the product is not available."}
+    #         )
+    #
+    #     order_item = OrderItem.objects.create(
+    #         product=product,
+    #         order=kwargs['order'],
+    #         quantity=validated_data["quantity"]
+    #     )
+    #
+    #     order_item.save()
+    #
+    #     product.quantity = product.quantity - order_item.quantity
+    #     product.save()
+    #
+    #     return order_item
