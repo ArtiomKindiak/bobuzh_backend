@@ -13,6 +13,7 @@ class Category(models.Model):
     description = models.TextField('category description')
     code = models.CharField('category code', max_length=255, blank=True, null=True)
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
+    slug = models.SlugField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -28,6 +29,7 @@ class Product(models.Model):
     name = models.CharField('product name', max_length=255)
     description = models.TextField('description', blank=True, null=True)
     code = models.CharField('product code', max_length=255, blank=True, null=True)
+    slug = models.SlugField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     price = models.DecimalField('product price', decimal_places=2, max_digits=10)
