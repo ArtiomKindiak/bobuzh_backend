@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 
 from django.contrib.auth.models import User
-from base.models import Category, Product, Order, OrderItem
+from base.models import Category, Product, Order, OrderItem, Customer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .serializers import (
@@ -12,7 +12,6 @@ from .serializers import (
     CustomerSerializer,
     OrderSerializer,
     OrderItemSerializer,
-    AddOrderItemSerializer,
 )
 from rest_framework import generics, status, viewsets
 from rest_framework.views import APIView
@@ -111,19 +110,33 @@ class ProductRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
 
 
-class OrderViewSet(viewsets.ViewSet):
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
 
-    def list(self, request):
-        queryset = Order.objects.all()
-        serializer = OrderSerializer(queryset, many=True)
-        return Response(serializer.data)
+    def post(self, request):
+        input_data = self.request.data
+        # {"products": [{"id": 2, "quantity": 3}, {"id": 3, "quantity": 4}], "customer" {}}
 
-    def create(self, request):
-        order = Order.objects.create()
+        customer = input_data.get('customer')
+        if not customer:
+            return Response({'non customer error': 'sdadad'}, status=status.HTTP_400_BAD_REQUEST)
 
-        data = request.data['products']
-        serializer = AddOrderItemSerializer(data)
-        order_item = OrderItem.objects.create(**serializer.data, order_id=order.id)
+        sz_customer = CustomerSerializer(data=customer)
+        sz_customer.is_valid(raise_exception=True)
+        sz_customer.save()
 
-        order_serializer = OrderSerializer(order)
-        return Response(order_serializer.data)
+        saved_customer = sz_customer.instance
+
+        order = Order.objects.create(customer=saved_customer)
+
+        products = input_data.get("products", [])
+        for product in products:
+            product['order'] = order.id
+            sz_product_item = OrderItemSerializer(data=product)
+            sz_product_item.is_valid(raise_exception=True)
+            sz_product_item.save()
+
+        order.calculate_total()
+        order_sz = self.get_serializer(instance=order)
+        return Response(order_sz.data, status=status.HTTP_201_CREATED)

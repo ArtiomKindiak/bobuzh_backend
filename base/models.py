@@ -54,10 +54,15 @@ class Customer(models.Model):
 
 
 class Order(models.Model):
+    class Meta:
+        verbose_name_plural = 'Orders'
+        ordering = ['-created_at']
+
     class Status(models.TextChoices):
-        PEN = "1", "Pending"
-        PRO = "2", "Processed"
-        DEL = "3", "Delivered"
+        PEN = 1, "Pending"
+        PRO = 2, "Processed"
+        DEL = 3, "Delivered"
+
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, blank=True, null=True)
     total_price = models.DecimalField(
         'total order price',
@@ -67,21 +72,26 @@ class Order(models.Model):
         blank=True,
         null=True,
     )
-    status = models.CharField('Order status', max_length=10, choices=Status.choices,  default=Status.PEN)
+    status = models.IntegerField('Order status', max_length=10, choices=Status.choices,  default=Status.PEN)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name_plural = 'Orders'
-        ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.id}_{self.created_at}"
 
+    def calculate_total(self):
+        pass
+
+    def update_product_quantity(self):
+        pass
+
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField('product quantity', default=1)
+    order = models.ForeignKey(Order, related_name='order_items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='order_items', on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField('product quantity', default=1, null=True, blank=True)
+
+    def __unicode__(self):
+        return '%s: %s' % (self.product.id, self.quantity)
 
 
 @receiver(post_save, sender=OrderItem)
