@@ -74,7 +74,7 @@ class Order(models.Model):
         blank=True,
         null=True,
     )
-    status = models.IntegerField('Order status', max_length=10, choices=Status.choices,  default=Status.PEN)
+    status = models.IntegerField('Order status', choices=Status.choices,  default=Status.PEN)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

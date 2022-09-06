@@ -120,7 +120,10 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         customer = input_data.get('customer')
         if not customer:
-            return Response({'non customer error': 'sdadad'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'non customer error': 'Customer data is not provided.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         sz_customer = CustomerSerializer(data=customer)
         sz_customer.is_valid(raise_exception=True)
@@ -131,6 +134,12 @@ class OrderViewSet(viewsets.ModelViewSet):
         order = Order.objects.create(customer=saved_customer)
 
         products = input_data.get("products", [])
+        if not products:
+            return Response(
+                {'non products error': 'Products data is not provided.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         for product in products:
             product['order'] = order.id
             sz_product_item = OrderItemSerializer(data=product)
