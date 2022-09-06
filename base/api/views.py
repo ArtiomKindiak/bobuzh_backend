@@ -13,7 +13,7 @@ from .serializers import (
     OrderSerializer,
     OrderItemSerializer,
 )
-from rest_framework import generics, status, viewsets
+from rest_framework import generics, status, viewsets, serializers
 from rest_framework.views import APIView
 
 from rest_framework.response import Response
@@ -114,7 +114,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
-    def post(self, request):
+    def create(self, request, *args, **kwargs):
         input_data = self.request.data
         # {"products": [{"id": 2, "quantity": 3}, {"id": 3, "quantity": 4}], "customer" {}}
 
@@ -135,6 +135,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         products = input_data.get("products", [])
         if not products:
+            order.delete()
             return Response(
                 {'non products error': 'Products data is not provided.'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -146,6 +147,6 @@ class OrderViewSet(viewsets.ModelViewSet):
             sz_product_item.is_valid(raise_exception=True)
             sz_product_item.save()
 
-        order.calculate_total()
+        order.calculate_total_and_manage_product_quantity()
         order_sz = self.get_serializer(instance=order)
         return Response(order_sz.data, status=status.HTTP_201_CREATED)

@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 
-from rest_framework import serializers
+from rest_framework.response import Response
+from rest_framework import serializers, status
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from django.contrib.auth.models import User
@@ -89,15 +90,27 @@ class CustomerSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class OrderSerializer(serializers.ModelSerializer):
-    order_items = serializers.StringRelatedField(many=True, required=False)
-
-    class Meta:
-        model = Order
-        fields = ('id', 'customer', 'total_price', 'created_at', 'order_items',)
-
-
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
         fields = ('id', 'order', 'product', 'quantity',)
+
+    def create(self, validated_data):
+        input_quantity = validated_data.get('quantity')
+        product = Product.objects.get(pk=validated_data['product'].id)
+        if not product.is_available or input_quantity > product.quantity:
+            raise serializers.ValidationError(
+                {"product not available error": f"Product {product.name} is not available."}
+            )
+
+        order_item = OrderItem.objects.create(**validated_data)
+        order_item.save()
+        return order_item
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    products = serializers.ListSerializer(child=OrderItemSerializer(), write_only=True)
+
+    class Meta:
+        model = Order
+        fields = ('id', 'customer', 'total_price', 'created_at', 'products',)

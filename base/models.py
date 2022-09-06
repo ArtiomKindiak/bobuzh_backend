@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from decimal import Decimal
 
 # Create your models here.
 
@@ -10,7 +11,7 @@ User = get_user_model()
 
 class Category(models.Model):
     name = models.CharField('category name', max_length=255)
-    description = models.TextField('category description')
+    description = models.TextField('category description', blank=True, null=True)
     code = models.CharField('category code', max_length=255, blank=True, null=True)
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
     slug = models.SlugField(max_length=255, blank=True, null=True)
@@ -80,8 +81,12 @@ class Order(models.Model):
     def __str__(self):
         return f"{self.id}_{self.created_at}"
 
-    def calculate_total(self):
-        pass
+    def calculate_total_and_manage_product_quantity(self):
+        order_items = self.order_items.all()
+        for item in order_items:
+            price_to_add = item.product.price * item.quantity
+            self.total_price = Decimal(self.total_price) + Decimal(price_to_add)
+        self.save()
 
     def update_product_quantity(self):
         pass
@@ -96,8 +101,8 @@ class OrderItem(models.Model):
         return '%s: %s' % (self.product.id, self.quantity)
 
 
-@receiver(post_save, sender=OrderItem)
-def update_order(sender, instance, **kwargs):
-    total = instance.quantity * instance.product.price
-    instance.product.quantity -= instance.quantity
-    instance.order.total_price += total
+# @receiver(post_save, sender=OrderItem)
+# def update_order(sender, instance, **kwargs):
+#     total = instance.quantity * instance.product.price
+#     instance.product.quantity -= instance.quantity
+#     instance.order.total_price += total
