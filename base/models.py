@@ -1,8 +1,9 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from decimal import Decimal
+from uuid import uuid4
 
 # Create your models here.
 
@@ -48,12 +49,15 @@ class Product(models.Model):
 
 class Customer(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
-    email = models.EmailField('email', blank=True, null=True)
+    email = models.EmailField('email', blank=True, null=True, unique=True)
     first_name = models.CharField('first name', max_length=255, blank=True, null=True)
     last_name = models.CharField('last name', max_length=255, blank=True, null=True)
     mobile_number = models.CharField('mobile number', max_length=50, blank=True, null=True)
     address = models.CharField('address', max_length=255, blank=True, null=True)
     post_address = models.CharField('post address', max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return self.email or self.mobile_number
 
 
 class Order(models.Model):
@@ -76,10 +80,11 @@ class Order(models.Model):
         null=True,
     )
     status = models.IntegerField('Order status', choices=Status.choices,  default=Status.PEN)
+    uuid = models.CharField(max_length=36, unique=True, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.id}_{self.created_at}"
+        return f"{self.uuid}_{self.created_at}"
 
     def calculate_total_and_manage_product_quantity(self):
         order_items = self.order_items.all()
@@ -88,8 +93,16 @@ class Order(models.Model):
             self.total_price = Decimal(self.total_price) + Decimal(price_to_add)
         self.save()
 
-    def update_product_quantity(self):
-        pass
+    def set_unique_id(self):
+        self.uuid = uuid4()
+        self.save()
+
+    def delete(self, *args, **kwargs):
+        order_items = self.order_items.all()
+        for item in order_items:
+            item.product.quantity += item.quantity
+            item.product.save()
+        super(Order, self).delete(*args, **kwargs)
 
 
 class OrderItem(models.Model):
@@ -100,9 +113,13 @@ class OrderItem(models.Model):
     def __unicode__(self):
         return '%s: %s' % (self.product.id, self.quantity)
 
+    def save(self, *args, **kwargs):
+        self.product.quantity -= self.quantity
+        self.product.save()
+        super(OrderItem, self).save(*args, **kwargs)
 
-# @receiver(post_save, sender=OrderItem)
-# def update_order(sender, instance, **kwargs):
-#     total = instance.quantity * instance.product.price
+# @receiver(post_delete, sender=Order)
+# def update_product_quantity(sender, instance, **kwargs):
+#     products = instance.order_items.all()
 #     instance.product.quantity -= instance.quantity
 #     instance.order.total_price += total

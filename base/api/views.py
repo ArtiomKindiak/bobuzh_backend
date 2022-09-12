@@ -126,12 +126,14 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
 
         sz_customer = CustomerSerializer(data=customer)
-        sz_customer.is_valid(raise_exception=True)
-        sz_customer.save()
+        if sz_customer.is_valid():
+            instance, created = sz_customer.get_or_create()
+            if not created:
+                sz_customer.update(instance, sz_customer.validated_data)
+        else:
+            return Response(sz_customer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        saved_customer = sz_customer.instance
-
-        order = Order.objects.create(customer=saved_customer)
+        order = Order.objects.create(customer=instance)
 
         products = input_data.get("products", [])
         if not products:
@@ -144,9 +146,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         for product in products:
             product['order'] = order.id
             sz_product_item = OrderItemSerializer(data=product)
-            sz_product_item.is_valid(raise_exception=True)
+            if not sz_product_item.is_valid():
+                order.delete()
+                return Response(
+                    {'non products errors': sz_product_item.errors},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             sz_product_item.save()
 
         order.calculate_total_and_manage_product_quantity()
+        order.set_unique_id()
         order_sz = self.get_serializer(instance=order)
         return Response(order_sz.data, status=status.HTTP_201_CREATED)

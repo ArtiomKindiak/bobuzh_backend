@@ -85,9 +85,16 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True)
+
     class Meta:
         model = Customer
         fields = '__all__'
+
+    def get_or_create(self):
+        defaults = self.validated_data.copy()
+        identifier = defaults.pop('email')
+        return Customer.objects.get_or_create(email=identifier, defaults=defaults)
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -95,17 +102,14 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = ('id', 'order', 'product', 'quantity',)
 
-    def create(self, validated_data):
-        input_quantity = validated_data.get('quantity')
-        product = Product.objects.get(pk=validated_data['product'].id)
+    def validate(self, attrs):
+        input_quantity = attrs.get('quantity')
+        product = Product.objects.get(pk=attrs['product'].id)
         if not product.is_available or input_quantity > product.quantity:
             raise serializers.ValidationError(
                 {"product not available error": f"Product {product.name} is not available."}
             )
-
-        order_item = OrderItem.objects.create(**validated_data)
-        order_item.save()
-        return order_item
+        return attrs
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -113,4 +117,5 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ('id', 'customer', 'total_price', 'created_at', 'products',)
+        fields = ('id', 'customer', 'total_price', 'created_at', 'products', 'uuid',)
+        read_only_fields = ('id', 'uuid',)
