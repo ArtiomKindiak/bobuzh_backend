@@ -107,13 +107,18 @@ class OrderItemSerializer(serializers.ModelSerializer):
         product = Product.objects.get(pk=attrs['product'].id)
         if not product.is_available or input_quantity > product.quantity:
             raise serializers.ValidationError(
-                {"product not available error": f"Product {product.name} is not available."}
+                {"product not available error":
+                    {"message": f"Product {product.name} is not available.",
+                     "product_id": product.id,
+                     "is_available": product.is_available,
+                     "available_quantity": product.quantity}
+                 }
             )
         return attrs
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    products = serializers.ListSerializer(child=OrderItemSerializer(), write_only=True)
+    products = OrderItemSerializer(many=True, required=False)
 
     class Meta:
         model = Order

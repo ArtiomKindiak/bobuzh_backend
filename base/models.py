@@ -110,8 +110,8 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, related_name='order_items', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField('product quantity', default=1, null=True, blank=True)
 
-    def __unicode__(self):
-        return '%s: %s' % (self.product.id, self.quantity)
+    def __str__(self):
+        return f"{self.order.id}: {self.product.name}_{self.quantity}"
 
     def save(self, *args, **kwargs):
         self.product.quantity -= self.quantity
