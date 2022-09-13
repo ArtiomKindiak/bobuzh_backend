@@ -7,7 +7,6 @@ class OrderItemAdmin(admin.ModelAdmin):
         total = obj.quantity * obj.product.price
         obj.product.quantity -= obj.quantity
         obj.order.total_price += total
-        obj.order.products.add(obj.product)
         obj.order.save()
         super().save_model(request, obj, form, change)
 

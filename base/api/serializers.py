@@ -1,13 +1,21 @@
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 
-from rest_framework import serializers
+from rest_framework.response import Response
+from rest_framework import serializers, status
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from django.contrib.auth.models import User
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 
-from base.models import Category, Product
+from base.models import (
+    Category,
+    Product,
+    Customer,
+    Order,
+    OrderItem
+)
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -74,3 +82,40 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at')
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True)
+
+    class Meta:
+        model = Customer
+        fields = '__all__'
+
+    def get_or_create(self):
+        defaults = self.validated_data.copy()
+        identifier = defaults.pop('email')
+        return Customer.objects.get_or_create(email=identifier, defaults=defaults)
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ('id', 'order', 'product', 'quantity',)
+
+    def validate(self, attrs):
+        input_quantity = attrs.get('quantity')
+        product = Product.objects.get(pk=attrs['product'].id)
+        if not product.is_available or input_quantity > product.quantity:
+            raise serializers.ValidationError(
+                {"product not available error": f"Product {product.name} is not available."}
+            )
+        return attrs
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    products = serializers.ListSerializer(child=OrderItemSerializer(), write_only=True)
+
+    class Meta:
+        model = Order
+        fields = ('id', 'customer', 'total_price', 'created_at', 'products', 'uuid',)
+        read_only_fields = ('id', 'uuid',)

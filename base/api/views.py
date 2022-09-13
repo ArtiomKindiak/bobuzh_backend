@@ -1,18 +1,25 @@
 from django.http import JsonResponse
 
 from django.contrib.auth.models import User
-from base.models import Category, Product
+from base.models import Category, Product, Order, OrderItem, Customer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from .serializers import (MyTokenObtainPairSerializer, RegisterSerializer, CategorySerializer, ProductSerializer)
-from rest_framework import generics, status
+from .serializers import (
+    MyTokenObtainPairSerializer,
+    RegisterSerializer,
+    CategorySerializer,
+    ProductSerializer,
+    CustomerSerializer,
+    OrderSerializer,
+    OrderItemSerializer,
+)
+from rest_framework import generics, status, viewsets, serializers
 from rest_framework.views import APIView
 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
-
 
 
 @api_view(['GET'])
@@ -101,3 +108,53 @@ class ProductRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = (AllowAny,)
+
+
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+
+    def create(self, request, *args, **kwargs):
+        input_data = self.request.data
+        # {"products": [{"id": 2, "quantity": 3}, {"id": 3, "quantity": 4}], "customer" {}}
+
+        customer = input_data.get('customer')
+        if not customer:
+            return Response(
+                {'non customer error': 'Customer data is not provided.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        sz_customer = CustomerSerializer(data=customer)
+        if sz_customer.is_valid():
+            instance, created = sz_customer.get_or_create()
+            if not created:
+                sz_customer.update(instance, sz_customer.validated_data)
+        else:
+            return Response(sz_customer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        order = Order.objects.create(customer=instance)
+
+        products = input_data.get("products", [])
+        if not products:
+            order.delete()
+            return Response(
+                {'non products error': 'Products data is not provided.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        for product in products:
+            product['order'] = order.id
+            sz_product_item = OrderItemSerializer(data=product)
+            if not sz_product_item.is_valid():
+                order.delete()
+                return Response(
+                    {'non products errors': sz_product_item.errors},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            sz_product_item.save()
+
+        order.calculate_total_and_manage_product_quantity()
+        order.set_unique_id()
+        order_sz = self.get_serializer(instance=order)
+        return Response(order_sz.data, status=status.HTTP_201_CREATED)
