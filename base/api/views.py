@@ -116,7 +116,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         input_data = self.request.data
-        # {"products": [{"id": 2, "quantity": 3}, {"id": 3, "quantity": 4}], "customer" {}}
+        # {"products": [{"product": 2, "quantity": 3}, {"product": 3, "quantity": 4}], "customer" {"email": "..."}}
 
         customer = input_data.get('customer')
         if not customer:
@@ -145,14 +145,15 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         for product in products:
             product['order'] = order.id
-            sz_product_item = OrderItemSerializer(data=product)
-            if not sz_product_item.is_valid():
-                order.delete()
-                return Response(
-                    {'non products errors': sz_product_item.errors},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            sz_product_item.save()
+
+        sz_product_item = OrderItemSerializer(data=products, many=True)
+        if not sz_product_item.is_valid():
+            order.delete()
+            return Response(
+                {'product errors': sz_product_item.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        sz_product_item.save()
 
         order.calculate_total_and_manage_product_quantity()
         order.set_unique_id()
