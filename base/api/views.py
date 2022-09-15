@@ -155,7 +155,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
         sz_product_item.save()
 
-        order.calculate_total_and_manage_product_quantity()
+        order.calculate_total_price()
         order.set_unique_id()
         order_sz = self.get_serializer(instance=order)
         return Response(order_sz.data, status=status.HTTP_201_CREATED)
