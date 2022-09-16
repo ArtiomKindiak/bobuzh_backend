@@ -86,7 +86,7 @@ class Order(models.Model):
     def __str__(self):
         return f"{self.uuid}_{self.created_at}"
 
-    def calculate_total_and_manage_product_quantity(self):
+    def calculate_total_price(self):
         order_items = self.order_items.all()
         for item in order_items:
             price_to_add = item.product.price * item.quantity
