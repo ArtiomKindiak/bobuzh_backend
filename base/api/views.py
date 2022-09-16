@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 
 from django.contrib.auth.models import User
-from base.models import Category, Product, Order, OrderItem, Customer
+from base.models import Category, Product, Order, OrderItem, Customer, ProductRating
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .serializers import (
@@ -12,6 +12,7 @@ from .serializers import (
     CustomerSerializer,
     OrderSerializer,
     OrderItemSerializer,
+    ProductRatingSerializer
 )
 from rest_framework import generics, status, viewsets, serializers
 from rest_framework.views import APIView
@@ -159,3 +160,9 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.set_unique_id()
         order_sz = self.get_serializer(instance=order)
         return Response(order_sz.data, status=status.HTTP_201_CREATED)
+
+
+class ProductRatingCreateUpdateView(generics.CreateAPIView):
+    queryset = ProductRating.objects.all()
+    serializer_class = ProductRatingSerializer
+    permission_classes = (IsAuthenticated,)

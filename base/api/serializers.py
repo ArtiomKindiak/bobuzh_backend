@@ -14,7 +14,8 @@ from base.models import (
     Product,
     Customer,
     Order,
-    OrderItem
+    OrderItem,
+    ProductRating
 )
 
 
@@ -84,6 +85,14 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at', 'rating')
+
+
+class ProductRatingSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = ProductRating
+        fields = ('user', 'product', 'score',)
 
 
 class CustomerSerializer(serializers.ModelSerializer):
