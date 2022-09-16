@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django.core.validators import MaxValueValidator, MinValueValidator
 from decimal import Decimal
 from uuid import uuid4
 
@@ -28,6 +29,9 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+    class Meta:
+        ordering = ['created_at']
+
     name = models.CharField('product name', max_length=255)
     description = models.TextField('description', blank=True, null=True)
     code = models.CharField('product code', max_length=255, blank=True, null=True)
@@ -40,11 +44,12 @@ class Product(models.Model):
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, blank=True, null=True)
     is_available = models.BooleanField('product availability', default=True)
 
-    class Meta:
-        ordering = ['created_at']
-
     def __str__(self):
         return self.name
+
+    @property
+    def rating(self):
+        return self.product_rating.aggregate(models.Avg("score"))
 
 
 class Customer(models.Model):
@@ -117,6 +122,15 @@ class OrderItem(models.Model):
         self.product.quantity -= self.quantity
         self.product.save()
         super(OrderItem, self).save(*args, **kwargs)
+
+
+class ProductRating(models.Model):
+    class Meta:
+        unique_together = ('user', 'product',)
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name="product_rating", on_delete=models.CASCADE)
+    score = models.IntegerField(null=True, blank=True, validators=(MinValueValidator(1), MaxValueValidator(5),))
 
 # @receiver(post_delete, sender=Order)
 # def update_product_quantity(sender, instance, **kwargs):
