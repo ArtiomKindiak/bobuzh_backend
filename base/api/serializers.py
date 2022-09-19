@@ -88,11 +88,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class ProductRatingSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
     class Meta:
         model = ProductRating
         fields = ('user', 'product', 'score',)
+        read_only_fields = ('user', 'product',)
 
 
 class CustomerSerializer(serializers.ModelSerializer):
