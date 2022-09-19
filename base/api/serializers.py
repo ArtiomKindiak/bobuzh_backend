@@ -14,7 +14,8 @@ from base.models import (
     Product,
     Customer,
     Order,
-    OrderItem
+    OrderItem,
+    ProductRating
 )
 
 
@@ -78,10 +79,19 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    rating = serializers.ReadOnlyField()
+
     class Meta:
         model = Product
         fields = '__all__'
-        read_only_fields = ('created_at', 'updated_at')
+        read_only_fields = ('created_at', 'updated_at', 'rating')
+
+
+class ProductRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductRating
+        fields = ('user', 'product', 'score',)
+        read_only_fields = ('user', 'product',)
 
 
 class CustomerSerializer(serializers.ModelSerializer):

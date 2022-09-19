@@ -1,8 +1,8 @@
 from django.http import JsonResponse
 
 from django.contrib.auth.models import User
-from base.models import Category, Product, Order, OrderItem, Customer
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from base.models import Category, Product, Order, OrderItem, Customer, ProductRating
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 
 from .serializers import (
     MyTokenObtainPairSerializer,
@@ -12,12 +12,13 @@ from .serializers import (
     CustomerSerializer,
     OrderSerializer,
     OrderItemSerializer,
+    ProductRatingSerializer
 )
 from rest_framework import generics, status, viewsets, serializers
 from rest_framework.views import APIView
 
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, action, authentication_classes, permission_classes
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 
@@ -92,7 +93,8 @@ class CategoryRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (AllowAny,)
 
 
-class ProductListCreateView(generics.ListCreateAPIView):
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = (AllowAny,)
 
@@ -103,11 +105,21 @@ class ProductListCreateView(generics.ListCreateAPIView):
             queryset = queryset.filter(**params)
         return queryset
 
-
-class ProductRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = (AllowAny,)
+    @action(detail=True, methods=['put'], permission_classes=(IsAuthenticated,))
+    def add_rating(self, request, pk):
+        user = self.request.user
+        product = self.get_object()
+        serializer = ProductRatingSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            rating, created = ProductRating.objects.update_or_create(
+                user=user,
+                product=product,
+                defaults={"score": serializer.validated_data['score']}
+            )
+            product_sz = self.get_serializer(instance=product)
+            if created:
+                return Response(product_sz.data, status=status.HTTP_201_CREATED)
+            return Response(product_sz.data, status=status.HTTP_200_OK)
 
 
 class OrderViewSet(viewsets.ModelViewSet):
