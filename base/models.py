@@ -49,7 +49,8 @@ class Product(models.Model):
 
     @property
     def rating(self):
-        return self.product_rating.aggregate(models.Avg("score"))
+        rating = self.product_rating.aggregate(models.Avg("score"))['score__avg']
+        return rating
 
 
 class Customer(models.Model):
