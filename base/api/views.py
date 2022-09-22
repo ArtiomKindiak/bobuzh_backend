@@ -2,7 +2,7 @@ from django.http import JsonResponse
 
 from django.contrib.auth.models import User
 from base.models import Category, Product, Order, OrderItem, Customer, ProductRating
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
 
 from .serializers import (
     MyTokenObtainPairSerializer,
@@ -12,7 +12,8 @@ from .serializers import (
     CustomerSerializer,
     OrderSerializer,
     OrderItemSerializer,
-    ProductRatingSerializer
+    ProductRatingSerializer,
+    ProductImageSerializer,
 )
 from rest_framework import generics, status, viewsets, serializers
 from rest_framework.views import APIView
@@ -120,6 +121,22 @@ class ProductViewSet(viewsets.ModelViewSet):
             if created:
                 return Response(product_sz.data, status=status.HTTP_201_CREATED)
             return Response(product_sz.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post', 'patch', 'put'],
+            permission_classes=(IsAdminUser,), serializer_class=ProductImageSerializer)
+    def upload_image(self, request, pk):
+        product = self.get_object()
+        try:
+            image = request.FILES['image']
+        except KeyError:
+            return Response("image is not provided", status=status.HTTP_400_BAD_REQUEST)
+
+        if product.image:
+            product.image.delete(False)
+
+        product.image = image
+        product.save()
+        return Response('Image was uploaded')
 
 
 class OrderViewSet(viewsets.ModelViewSet):

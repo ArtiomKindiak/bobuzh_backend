@@ -95,6 +95,12 @@ class ProductRatingSerializer(serializers.ModelSerializer):
         read_only_fields = ('user', 'product',)
 
 
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ('id', 'image',)
+
+
 class CustomerSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
 
