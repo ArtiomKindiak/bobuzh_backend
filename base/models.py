@@ -43,6 +43,7 @@ class Product(models.Model):
     brand = models.CharField('product brand', max_length=255)
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, blank=True, null=True)
     is_available = models.BooleanField('product availability', default=True)
+    image = models.ImageField(upload_to='products/images/', blank=True, null=True)
 
     def __str__(self):
         return self.name
