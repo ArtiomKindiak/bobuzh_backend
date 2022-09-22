@@ -43,13 +43,15 @@ class Product(models.Model):
     brand = models.CharField('product brand', max_length=255)
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, blank=True, null=True)
     is_available = models.BooleanField('product availability', default=True)
+    image = models.ImageField(upload_to='products/images/', blank=True, null=True)
 
     def __str__(self):
         return self.name
 
     @property
     def rating(self):
-        return self.product_rating.aggregate(models.Avg("score"))
+        rating = self.product_rating.aggregate(models.Avg("score"))['score__avg']
+        return rating
 
 
 class Customer(models.Model):
