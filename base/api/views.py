@@ -35,7 +35,9 @@ def get_routes(request):
         'api/store/categories/',
         'api/store/categories/<id>/',
         'api/store/products/',
-        'api/store/products/<id>'
+        'api/store/products/<id>/',
+        'api/store/products/<id>/add_rating/',
+        'api/store/products/<id>/upload_image/'
     ]
     return Response(routes)
 
@@ -77,15 +79,16 @@ class LogoutAllView(APIView):
 
 
 class CategoryListCreateView(generics.ListCreateAPIView):
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (AllowAny,)
 
-    def get_queryset(self):
-        queryset = Category.objects.all()
-        if params := self.request.query_params:
-            params = params.dict()
-            queryset = queryset.filter(**params)
-        return queryset
+    # def get_queryset(self):
+    #     queryset = Category.objects.all()
+    #     if params := self.request.query_params:
+    #         params = params.dict()
+    #         queryset = queryset.filter(**params)
+    #     return queryset
 
 
 class CategoryRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
@@ -99,12 +102,12 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = (AllowAny,)
 
-    def get_queryset(self):
-        queryset = Product.objects.all()
-        if params := self.request.query_params:
-            params = params.dict()
-            queryset = queryset.filter(**params)
-        return queryset
+    # def get_queryset(self):
+    #     queryset = Product.objects.all()
+    #     if params := self.request.query_params:
+    #         params = params.dict()
+    #         queryset = queryset.filter(**params)
+    #     return queryset
 
     @action(detail=True, methods=['put'], permission_classes=(IsAuthenticated,))
     def add_rating(self, request, pk):
