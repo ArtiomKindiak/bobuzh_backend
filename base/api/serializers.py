@@ -15,7 +15,10 @@ from base.models import (
     Customer,
     Order,
     OrderItem,
-    ProductRating
+    ProductRating,
+    ProductSpecification,
+    Specification,
+    SpecificationOption
 )
 
 
@@ -83,9 +86,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ('id', 'name', 'description', 'code', 'slug', 'price',
-                  'quantity', 'brand', 'category', 'rating', 'image',)
+        fields = ('id', 'name', 'description', 'code', 'price',
+                  'quantity', 'category', 'rating', 'image', 'product_specifications',)
         read_only_fields = ('created_at', 'updated_at', 'rating', 'image',)
+        depth = 2
 
 
 class ProductRatingSerializer(serializers.ModelSerializer):

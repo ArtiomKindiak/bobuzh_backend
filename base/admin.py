@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import Category, Product, Order, OrderItem, Customer, ProductRating
+from .models import (
+    Category, Product, Order, OrderItem, Customer, ProductRating, Specification, SpecificationOption,
+    ProductSpecification
+)
 
 
 class OrderItemAdmin(admin.ModelAdmin):
@@ -11,9 +14,27 @@ class OrderItemAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
+class ProductSpecificationInline(admin.TabularInline):
+    model = ProductSpecification
+    extra = 1
+
+
+class SpecificationOptionInline(admin.StackedInline):
+    model = SpecificationOption
+    extra = 1
+
+
+class ProductAdmin(admin.ModelAdmin):
+    inlines = (ProductSpecificationInline,)
+
+
+class SpecificationAdmin(admin.ModelAdmin):
+    inlines = (SpecificationOptionInline,)
+
+
 admin.site.register(Category)
-admin.site.register(Product)
 admin.site.register(Customer)
 admin.site.register(Order)
 admin.site.register(OrderItem, OrderItemAdmin)
-admin.site.register(ProductRating)
+admin.site.register(Product, ProductAdmin)
+admin.site.register(Specification, SpecificationAdmin)
