@@ -81,15 +81,31 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = ('created_at', 'updated_at')
 
 
+class SpecificationSerializer(serializers.ModelSerializer):
+    specification = serializers.ReadOnlyField(source='specification.name')
+
+    class Meta:
+        model = SpecificationOption
+        fields = ('specification', 'value')
+
+
+class ProductSpecificationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductSpecification
+        fields = ('option',)
+        read_only_fields = ('option',)
+
+
 class ProductSerializer(serializers.ModelSerializer):
     rating = serializers.ReadOnlyField()
+    specifications = SpecificationSerializer(many=True, read_only=True, source='product_specifications')
 
     class Meta:
         model = Product
         fields = ('id', 'name', 'description', 'code', 'price',
-                  'quantity', 'category', 'rating', 'image', 'product_specifications',)
+                  'quantity', 'category', 'rating', 'image', 'specifications',)
         read_only_fields = ('created_at', 'updated_at', 'rating', 'image',)
-        depth = 2
 
 
 class ProductRatingSerializer(serializers.ModelSerializer):

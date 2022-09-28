@@ -1,3 +1,4 @@
+import json
 from django.http import JsonResponse
 
 from django.contrib.auth.models import User
@@ -102,12 +103,19 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = (AllowAny,)
 
-    # def get_queryset(self):
-    #     queryset = Product.objects.all()
-    #     if params := self.request.query_params:
-    #         params = params.dict()
-    #         queryset = queryset.filter(**params)
-    #     return queryset
+    def get_queryset(self):
+        queryset = Product.objects.all()
+        if params := self.request.query_params:
+            params = params.dict()
+            params.pop('limit', None)
+            params.pop('offset', None)
+            if specifications := params.pop('specifications', None):
+                specifications = json.loads(specifications)
+                for option in specifications.get("options"):
+                    queryset = queryset.filter(productspecification__option=option)
+
+            queryset = queryset.filter(**params)
+        return queryset
 
     @action(detail=True, methods=['put'], permission_classes=(IsAuthenticated,))
     def add_rating(self, request, pk):

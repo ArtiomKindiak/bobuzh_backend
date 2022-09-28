@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    Category, Product, Order, OrderItem, Customer, ProductRating, Specification, SpecificationOption,
+    Category, Product, Order, OrderItem, Customer, Specification, SpecificationOption,
     ProductSpecification
 )
 
@@ -25,6 +25,7 @@ class SpecificationOptionInline(admin.StackedInline):
 
 
 class ProductAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code', 'price', 'quantity', 'category', 'rating', 'is_available', 'created_at')
     inlines = (ProductSpecificationInline,)
 
 
