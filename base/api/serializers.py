@@ -1,8 +1,6 @@
 from django.conf import settings
-from django.shortcuts import get_object_or_404
 
-from rest_framework.response import Response
-from rest_framework import serializers, status
+from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from django.contrib.auth.models import User
@@ -16,7 +14,6 @@ from base.models import (
     Order,
     OrderItem,
     ProductRating,
-    ProductSpecification,
     Specification,
     SpecificationOption
 )
@@ -81,7 +78,21 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = ('created_at', 'updated_at')
 
 
+class OptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpecificationOption
+        fields = ('id', 'value')
+
+
 class SpecificationSerializer(serializers.ModelSerializer):
+    options = OptionSerializer(many=True, read_only=True, source='specification_option')
+
+    class Meta:
+        model = Specification
+        fields = ('id', 'name', 'options')
+
+
+class SpecificationOptionSerializer(serializers.ModelSerializer):
     specification = serializers.ReadOnlyField(source='specification.name')
 
     class Meta:
@@ -89,17 +100,9 @@ class SpecificationSerializer(serializers.ModelSerializer):
         fields = ('specification', 'value')
 
 
-class ProductSpecificationSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ProductSpecification
-        fields = ('option',)
-        read_only_fields = ('option',)
-
-
 class ProductSerializer(serializers.ModelSerializer):
     rating = serializers.ReadOnlyField()
-    specifications = SpecificationSerializer(many=True, read_only=True, source='product_specifications')
+    specifications = SpecificationOptionSerializer(many=True, read_only=True, source='product_specifications')
 
     class Meta:
         model = Product

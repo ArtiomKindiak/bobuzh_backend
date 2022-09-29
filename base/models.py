@@ -92,13 +92,17 @@ class Customer(models.Model):
     def __str__(self):
         return self.email or self.mobile_number
 
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
 
 class Order(models.Model):
     class Meta:
         verbose_name_plural = 'Orders'
         ordering = ['-created_at']
 
-    class Status(models.TextChoices):
+    class Status(models.IntegerChoices):
         PEN = 1, "Pending"
         PRO = 2, "Processed"
         DEL = 3, "Delivered"

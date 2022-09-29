@@ -2,7 +2,7 @@ import json
 from django.http import JsonResponse
 
 from django.contrib.auth.models import User
-from base.models import Category, Product, Order, OrderItem, Customer, ProductRating
+from base.models import Category, Product, Order, OrderItem, Customer, ProductRating, Specification
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
 
 from .serializers import (
@@ -15,6 +15,7 @@ from .serializers import (
     OrderItemSerializer,
     ProductRatingSerializer,
     ProductImageSerializer,
+    SpecificationSerializer,
 )
 from rest_framework import generics, status, viewsets, serializers
 from rest_framework.views import APIView
@@ -79,23 +80,33 @@ class LogoutAllView(APIView):
         return Response(status=status.HTTP_205_RESET_CONTENT)
 
 
-class CategoryListCreateView(generics.ListCreateAPIView):
+class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (AllowAny,)
+    pagination_class = None
 
-    # def get_queryset(self):
-    #     queryset = Category.objects.all()
-    #     if params := self.request.query_params:
-    #         params = params.dict()
-    #         queryset = queryset.filter(**params)
-    #     return queryset
+    def get_queryset(self):
+        queryset = Category.objects.all()
+        if params := self.request.query_params:
+            queryset = queryset.filter(**params)
+
+        return queryset
 
 
-class CategoryRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
+class FiltersListView(generics.ListAPIView):
+    queryset = Specification.objects.all()
+    serializer_class = SpecificationSerializer
     permission_classes = (AllowAny,)
+    pagination_class = None
+
+    def get_queryset(self):
+        queryset = Specification.objects.all().order_by('id')
+        if params := self.request.query_params:
+            category = params.get("category")
+            queryset = queryset.filter(specification__product__category__slug__icontains=category)
+
+        return queryset
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -106,15 +117,25 @@ class ProductViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Product.objects.all()
         if params := self.request.query_params:
-            params = params.dict()
-            params.pop('limit', None)
-            params.pop('offset', None)
-            if specifications := params.pop('specifications', None):
-                specifications = json.loads(specifications)
-                for option in specifications.get("options"):
-                    queryset = queryset.filter(productspecification__option=option)
+            if category_id := params.get('category_id'):
+                queryset = queryset.filter(category=category_id)
 
-            queryset = queryset.filter(**params)
+            if category_slug := params.get('category_slug'):
+                queryset = queryset.filter(category__slug=category_slug)
+
+            min_price = params.get('price_min')
+            max_price = params.get('price_max')
+
+            if all((min_price, max_price)):
+                queryset = queryset.filter(price__range=(min_price, max_price))
+
+            if specifications := params.get('specifications'):
+                #  specifications=[[2,3],[5,4]]
+                specifications = json.loads(specifications)
+                print(specifications)
+                for option in specifications:
+                    queryset = queryset.filter(productspecification__option_id__in=option).distinct()
+
         return queryset
 
     @action(detail=True, methods=['put'], permission_classes=(IsAuthenticated,))
