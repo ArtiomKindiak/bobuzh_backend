@@ -2,8 +2,7 @@ from django.urls import path, include
 from . import views
 from .views import (
     MyTokenObtainPairView, RegisterView, LogoutView, LogoutAllView,
-    CategoryListCreateView, CategoryRetrieveUpdateDeleteView,
-    ProductViewSet, OrderViewSet,
+    CategoryViewSet, ProductViewSet, OrderViewSet, FiltersListView,
 )
 
 from rest_framework.routers import DefaultRouter
@@ -14,6 +13,7 @@ from rest_framework_simplejwt.views import (
 
 
 router = DefaultRouter()
+router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'orders', OrderViewSet, basename='order')
 router.register(r'products', ProductViewSet, basename='product')
 
@@ -25,7 +25,6 @@ urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),
     path('auth/logout', LogoutView.as_view(), name='logout'),
     path('auth/logout-all', LogoutAllView.as_view(), name='logout-all'),
-    path('store/categories/', CategoryListCreateView.as_view(), name='categories'),
-    path('store/categories/<int:pk>/', CategoryRetrieveUpdateDeleteView.as_view(), name='categories/id'),
+    path('store/filters/', FiltersListView.as_view(), name='filters'),
     path('store/', include(router.urls)),
 ]

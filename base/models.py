@@ -17,6 +17,7 @@ class Category(models.Model):
     code = models.CharField('category code', max_length=255, blank=True, null=True)
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
     slug = models.SlugField(max_length=255, blank=True, null=True)
+    image = models.ImageField(upload_to='categories/images/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -28,6 +29,21 @@ class Category(models.Model):
         return self.name
 
 
+class Specification(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class SpecificationOption(models.Model):
+    value = models.CharField(max_length=255)
+    specification = models.ForeignKey(Specification, related_name="specification_option", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.specification.name}/{self.value}"
+
+
 class Product(models.Model):
     class Meta:
         ordering = ['created_at']
@@ -35,23 +51,33 @@ class Product(models.Model):
     name = models.CharField('product name', max_length=255)
     description = models.TextField('description', blank=True, null=True)
     code = models.CharField('product code', max_length=255, blank=True, null=True)
-    slug = models.SlugField(max_length=255, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     price = models.DecimalField('product price', decimal_places=2, max_digits=10)
     quantity = models.IntegerField('product quantity', default=0)
-    brand = models.CharField('product brand', max_length=255)
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, blank=True, null=True)
     is_available = models.BooleanField('product availability', default=True)
     image = models.ImageField(upload_to='products/images/', blank=True, null=True)
-
-    def __str__(self):
-        return self.name
+    product_specifications = models.ManyToManyField(
+        SpecificationOption, through='ProductSpecification', related_name='specifications', blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def rating(self):
         rating = self.product_rating.aggregate(models.Avg("score"))['score__avg']
         return rating
+
+    def __str__(self):
+        return self.name
+
+
+class ProductSpecification(models.Model):
+    class Meta:
+        unique_together = ('product', 'specification')
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    specification = models.ForeignKey(Specification, related_name='specification', on_delete=models.CASCADE)
+    option = models.ForeignKey(SpecificationOption, related_name='option', on_delete=models.CASCADE)
 
 
 class Customer(models.Model):
@@ -66,13 +92,17 @@ class Customer(models.Model):
     def __str__(self):
         return self.email or self.mobile_number
 
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
 
 class Order(models.Model):
     class Meta:
         verbose_name_plural = 'Orders'
         ordering = ['-created_at']
 
-    class Status(models.TextChoices):
+    class Status(models.IntegerChoices):
         PEN = 1, "Pending"
         PRO = 2, "Processed"
         DEL = 3, "Delivered"
