@@ -88,7 +88,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Category.objects.all()
-        if params := self.request.query_params:
+        if params := self.request.query_params.dict():
             queryset = queryset.filter(**params)
 
         return queryset
@@ -102,9 +102,11 @@ class FiltersListView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = Specification.objects.all().order_by('id')
-        if params := self.request.query_params:
-            category = params.get("category")
-            queryset = queryset.filter(specification__product__category__slug__icontains=category)
+        if params := self.request.query_params.dict():
+            if category_slug := params.get("category_slug"):
+                queryset = queryset.filter(specification__product__category__slug__icontains=category_slug)
+            if category_id := params.get("category_id"):
+                queryset = queryset.filter(specification__product__category=category_id)
 
         return queryset
 
@@ -116,7 +118,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Product.objects.all()
-        if params := self.request.query_params:
+        if params := self.request.query_params.dict():
             if category_id := params.get('category_id'):
                 queryset = queryset.filter(category=category_id)
 
