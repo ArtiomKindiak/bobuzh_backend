@@ -118,24 +118,24 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Product.objects.all()
-        if params := self.request.query_params.dict():
-            if category_id := params.get('category_id'):
+        if params := self.request.query_params:
+            if category_id := params.dict().get('category_id'):
                 queryset = queryset.filter(category=category_id)
 
-            if category_slug := params.get('category_slug'):
+            if category_slug := params.dict().get('category_slug'):
                 queryset = queryset.filter(category__slug=category_slug)
 
-            min_price = params.get('price_min')
-            max_price = params.get('price_max')
+            min_price = params.dict().get('price_min')
+            max_price = params.dict().get('price_max')
 
             if all((min_price, max_price)):
                 queryset = queryset.filter(price__range=(min_price, max_price))
 
-            if specifications := params.get('specifications'):
-                #  specifications=[[2,3],[5,4]]
-                specifications = json.loads(specifications)
-                print(specifications)
+            if specifications := params.getlist('specifications[]'):
+                #  specifications[]=2,3&specifications[]=5,4
                 for option in specifications:
+                    option = option.split(',')
+                    print(option)
                     queryset = queryset.filter(productspecification__option_id__in=option).distinct()
 
         return queryset
