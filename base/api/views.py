@@ -135,7 +135,6 @@ class ProductViewSet(viewsets.ModelViewSet):
                 #  specifications[]=2,3&specifications[]=5,4
                 for option in specifications:
                     option = option.split(',')
-                    print(option)
                     queryset = queryset.filter(productspecification__option_id__in=option).distinct()
 
         return queryset
