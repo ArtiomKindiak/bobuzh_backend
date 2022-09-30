@@ -101,12 +101,12 @@ class FiltersListView(generics.ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        queryset = Specification.objects.all().order_by('id')
+        queryset = Specification.objects.all().order_by('id').distinct()
         if params := self.request.query_params.dict():
             if category_slug := params.get("category_slug"):
-                queryset = queryset.filter(specification__product__category__slug__icontains=category_slug)
+                queryset = queryset.filter(specification__product__category__slug__icontains=category_slug).distinct()
             if category_id := params.get("category_id"):
-                queryset = queryset.filter(specification__product__category=category_id)
+                queryset = queryset.filter(specification__product__category=category_id).distinct()
 
         return queryset
 
