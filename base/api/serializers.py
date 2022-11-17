@@ -15,7 +15,9 @@ from base.models import (
     OrderItem,
     ProductRating,
     Specification,
-    SpecificationOption
+    SpecificationOption,
+    City,
+    NPDepartment,
 )
 
 
@@ -165,3 +167,15 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ('id', 'customer', 'total_price', 'created_at', 'products', 'uuid', 'order_items')
         read_only_fields = ('id', 'uuid', 'order_items')
         depth = 2
+
+
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = "__all__"
+
+
+class NPDepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NPDepartment
+        fields = "__all__"
