@@ -3,6 +3,7 @@ from . import views
 from .views import (
     MyTokenObtainPairView, RegisterView, LogoutView, LogoutAllView,
     CategoryViewSet, ProductViewSet, OrderViewSet, FiltersListView,
+    CityViewSet, NPDepartmentViewSet,
 )
 
 from rest_framework.routers import DefaultRouter
@@ -16,6 +17,8 @@ router = DefaultRouter()
 router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'orders', OrderViewSet, basename='order')
 router.register(r'products', ProductViewSet, basename='product')
+router.register(r'cities', CityViewSet, basename="city")
+router.register(r'np_departments', NPDepartmentViewSet, basename="department")
 
 urlpatterns = [
     path('', views.get_routes),

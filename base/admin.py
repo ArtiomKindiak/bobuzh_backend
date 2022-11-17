@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Category, Product, Order, OrderItem, Customer, Specification, SpecificationOption,
-    ProductSpecification
+    ProductSpecification, City, NPDepartment
 )
 
 
@@ -53,8 +53,19 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'code', 'slug', 'created_at')
 
 
+class NovaPoshtaDepartmentsAdmin(admin.StackedInline):
+    model = NPDepartment
+    extra = 1
+
+
+class CityDepartmentAdmin(admin.ModelAdmin):
+    inlines = (NovaPoshtaDepartmentsAdmin,)
+
+
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Specification, SpecificationAdmin)
+admin.site.register(City, CityDepartmentAdmin)
+admin.site.register(NPDepartment)

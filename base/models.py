@@ -166,6 +166,9 @@ class ProductRating(models.Model):
 
 
 class City(models.Model):
+    class Meta:
+        verbose_name_plural = "cities"
+
     name = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
