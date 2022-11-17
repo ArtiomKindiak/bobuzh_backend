@@ -164,6 +164,22 @@ class ProductRating(models.Model):
     product = models.ForeignKey(Product, related_name="product_rating", on_delete=models.CASCADE)
     score = models.IntegerField(null=True, blank=True, validators=(MinValueValidator(1), MaxValueValidator(5),))
 
+
+class City(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return f"{self.name}"
+
+
+class NPDepartment(models.Model):
+    department = models.CharField(max_length=200)
+    address = models.TextField()
+    city = models.ForeignKey(City, related_name="department_city", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.department}/{self.city} {self.address}"
+
 # @receiver(post_delete, sender=Order)
 # def update_product_quantity(sender, instance, **kwargs):
 #     products = instance.order_items.all()
