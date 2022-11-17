@@ -2,7 +2,7 @@ import json
 from django.http import JsonResponse
 
 from django.contrib.auth.models import User
-from base.models import Category, Product, Order, OrderItem, Customer, ProductRating, Specification
+from base.models import Category, Product, Order, ProductRating, Specification, City, NPDepartment
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
 
 from .serializers import (
@@ -16,6 +16,8 @@ from .serializers import (
     ProductRatingSerializer,
     ProductImageSerializer,
     SpecificationSerializer,
+    CitySerializer,
+    NPDepartmentSerializer,
 )
 from rest_framework import generics, status, viewsets, serializers
 from rest_framework.views import APIView
@@ -221,3 +223,23 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.set_unique_id()
         order_sz = self.get_serializer(instance=order)
         return Response(order_sz.data, status=status.HTTP_201_CREATED)
+
+
+class CityViewSet(viewsets.ModelViewSet):
+    queryset = City.objects.all()
+    serializer_class = CitySerializer
+    permission_classes = (AllowAny,)
+
+
+class NPDepartmentViewSet(viewsets.ModelViewSet):
+    queryset = NPDepartment.objects.all()
+    serializer_class = NPDepartmentSerializer
+    permission_classes = (AllowAny,)
+
+    def get_queryset(self):
+        queryset = NPDepartment.objects.all()
+        if params := self.request.query_params.dict():
+            if city := params.get("city_id"):
+                queryset.filter(city_id=city)
+
+        return queryset
