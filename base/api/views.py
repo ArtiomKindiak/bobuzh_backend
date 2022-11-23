@@ -240,6 +240,6 @@ class NPDepartmentViewSet(viewsets.ModelViewSet):
         queryset = NPDepartment.objects.all()
         if params := self.request.query_params.dict():
             if city := params.get("city_id"):
-                queryset.filter(city_id=city)
+                queryset = queryset.filter(city_id=city)
 
         return queryset
