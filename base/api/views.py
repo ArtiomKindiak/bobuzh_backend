@@ -139,6 +139,9 @@ class ProductViewSet(viewsets.ModelViewSet):
                     option = option.split(',')
                     queryset = queryset.filter(productspecification__option_id__in=option).distinct()
 
+            if code := params.dict().get('code'):
+                queryset = queryset.filter(code=code)
+
         return queryset
 
     @action(detail=True, methods=['put'], permission_classes=(IsAuthenticated,))
